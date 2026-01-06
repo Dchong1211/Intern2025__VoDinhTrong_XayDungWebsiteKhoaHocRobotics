@@ -26,6 +26,11 @@ Cách 1:
 Cách 2:
   - Hoặc đơn giản hơn cách trên là chỉ cần chạy file run.bat sau đó Ctrl + chuột trái vào link  http://localhost:5173/ để mở đến trang đăng nhập web
 
+- Và cách để có thể thay đổi gmail và supabase khi lấy source về là thay đổi các thuộc tính bên trong file /backend/.env
+- Và các thuộc tính cần thay đổi để phù hợp với quý công ty là SUPABASE_KEY, SUPABASE_URL, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM, MAIL_FROM_NAME
+- Code supabase sẽ nằm cùng cấp với backend và frontend là để quý công ty có thể dễ dàng khởi tạo database nhưng khi chạy code trong web thì không cần
+vì đã được lưu trực tiếp lên supabase nên không cần lo về việc database local nữa
+
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
 Ngôn ngữ lập trình: Node + TypeScript (Back End) và React + Vite  + Tailwind (Front End)
