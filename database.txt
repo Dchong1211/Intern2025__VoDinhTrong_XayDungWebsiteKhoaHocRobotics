@@ -1,0 +1,212 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.assignment_logs (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  assignment_id bigint NOT NULL,
+  action_user_id bigint NOT NULL,
+  action_type text NOT NULL,
+  change_details text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT assignment_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT assignment_logs_assignment_id_fkey FOREIGN KEY (assignment_id) REFERENCES public.assignments(id),
+  CONSTRAINT assignment_logs_action_user_id_fkey FOREIGN KEY (action_user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.assignments (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  teacher_id bigint NOT NULL,
+  resource_type text NOT NULL CHECK (resource_type = ANY (ARRAY['course'::text, 'program'::text])),
+  resource_id integer NOT NULL,
+  access_code_hash text,
+  start_at timestamp with time zone,
+  end_at timestamp with time zone,
+  code_expires_at timestamp with time zone,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['revoked'::text, 'active'::text, 'pending'::text])),
+  created_by_user_id bigint,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT assignments_pkey PRIMARY KEY (id),
+  CONSTRAINT assignments_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.users(id),
+  CONSTRAINT assignments_created_by_user_id_fkey FOREIGN KEY (created_by_user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.code_blocks (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  code_type text NOT NULL CHECK (code_type = ANY (ARRAY['python'::text, 'text'::text, 'icon'::text])),
+  name text NOT NULL,
+  CONSTRAINT code_blocks_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.content_code_blocks (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  code_block_id bigint NOT NULL,
+  content_type text NOT NULL CHECK (content_type = ANY (ARRAY['lesson'::text, 'course'::text, 'program'::text])),
+  content_id integer NOT NULL,
+  CONSTRAINT content_code_blocks_pkey PRIMARY KEY (id),
+  CONSTRAINT content_code_blocks_code_block_id_fkey FOREIGN KEY (code_block_id) REFERENCES public.code_blocks(id)
+);
+CREATE TABLE public.content_media (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  media_id bigint NOT NULL,
+  content_type text NOT NULL CHECK (content_type = ANY (ARRAY['lesson'::text, 'lesson_challenge'::text, 'course'::text, 'program'::text, 'lesson_build'::text])),
+  content_id bigint NOT NULL,
+  purpose text DEFAULT 'other'::text CHECK (purpose = ANY (ARRAY['attachment'::text, 'other'::text, 'gallery'::text, 'main'::text, 'intro'::text, 'cover'::text])),
+  sort_order integer DEFAULT 0,
+  CONSTRAINT content_media_pkey PRIMARY KEY (id),
+  CONSTRAINT content_media_media_id_fkey FOREIGN KEY (media_id) REFERENCES public.media(id)
+);
+CREATE TABLE public.courses (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  program_id bigint NOT NULL,
+  name text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  short_description text,
+  age_group text,
+  general_objectives text,
+  lesson_count integer DEFAULT 0,
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['archived'::text, 'published'::text, 'draft'::text])),
+  sort_order integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  course_code text,
+  CONSTRAINT courses_pkey PRIMARY KEY (id),
+  CONSTRAINT courses_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(id)
+);
+CREATE TABLE public.lesson_builds (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  lesson_id bigint NOT NULL,
+  build_type text NOT NULL CHECK (build_type = ANY (ARRAY['image_set'::text, 'pdf'::text])),
+  sort_order integer DEFAULT 0,
+  CONSTRAINT lesson_builds_pkey PRIMARY KEY (id),
+  CONSTRAINT lesson_builds_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+);
+CREATE TABLE public.lesson_challenges (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  lesson_id bigint NOT NULL,
+  title text NOT NULL,
+  subtitle text,
+  description text,
+  instructions text,
+  sort_order integer DEFAULT 0,
+  CONSTRAINT lesson_challenges_pkey PRIMARY KEY (id),
+  CONSTRAINT lesson_challenges_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+);
+CREATE TABLE public.lesson_contents (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  lesson_id bigint NOT NULL,
+  title text,
+  subtitle text,
+  description text,
+  usage_text text,
+  example_text text,
+  sort_order integer DEFAULT 0,
+  CONSTRAINT lesson_contents_pkey PRIMARY KEY (id),
+  CONSTRAINT lesson_contents_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+);
+CREATE TABLE public.lesson_models (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  lesson_id bigint NOT NULL,
+  title text NOT NULL,
+  description text,
+  sort_order integer DEFAULT 0,
+  CONSTRAINT lesson_models_pkey PRIMARY KEY (id),
+  CONSTRAINT lesson_models_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+);
+CREATE TABLE public.lesson_objectives (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  lesson_id bigint NOT NULL UNIQUE,
+  knowledge text,
+  thinking text,
+  skills text,
+  attitude text,
+  CONSTRAINT lesson_objectives_pkey PRIMARY KEY (id),
+  CONSTRAINT lesson_objectives_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+);
+CREATE TABLE public.lesson_preparation (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  lesson_id bigint NOT NULL UNIQUE,
+  notes text,
+  CONSTRAINT lesson_preparation_pkey PRIMARY KEY (id),
+  CONSTRAINT lesson_preparation_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+);
+CREATE TABLE public.lesson_quizzes (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  lesson_id bigint NOT NULL,
+  question_text text NOT NULL,
+  quiz_type text NOT NULL CHECK (quiz_type = ANY (ARRAY['open'::text, 'multiple'::text, 'single'::text])),
+  sort_order integer DEFAULT 0,
+  CONSTRAINT lesson_quizzes_pkey PRIMARY KEY (id),
+  CONSTRAINT lesson_quizzes_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+);
+CREATE TABLE public.lessons (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  course_id bigint NOT NULL,
+  title text NOT NULL,
+  subtitle text,
+  slug text NOT NULL UNIQUE,
+  overview text,
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['archived'::text, 'published'::text, 'draft'::text])),
+  sort_order integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT lessons_pkey PRIMARY KEY (id),
+  CONSTRAINT lessons_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id)
+);
+CREATE TABLE public.media (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  url text NOT NULL,
+  mime_type text,
+  file_size integer,
+  thumbnail_url text,
+  duration integer,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT media_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.programs (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  name text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  short_description text,
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['archived'::text, 'published'::text, 'draft'::text])),
+  sort_order integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT programs_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.quiz_answers (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  quiz_id bigint NOT NULL,
+  answer_text text NOT NULL,
+  is_correct boolean DEFAULT false,
+  explanation text,
+  CONSTRAINT quiz_answers_pkey PRIMARY KEY (id),
+  CONSTRAINT quiz_answers_quiz_id_fkey FOREIGN KEY (quiz_id) REFERENCES public.lesson_quizzes(id)
+);
+CREATE TABLE public.tag_map (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  tag_id bigint NOT NULL,
+  content_type text NOT NULL CHECK (content_type = ANY (ARRAY['lesson'::text, 'course'::text, 'program'::text])),
+  content_id integer NOT NULL,
+  CONSTRAINT tag_map_pkey PRIMARY KEY (id),
+  CONSTRAINT tag_map_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id)
+);
+CREATE TABLE public.tags (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  name text NOT NULL UNIQUE,
+  CONSTRAINT tags_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.users (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  email text NOT NULL UNIQUE,
+  password text NOT NULL,
+  role text NOT NULL CHECK (role = ANY (ARRAY['teacher'::text, 'admin'::text])),
+  full_name text,
+  avatar_url text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  reset_token text,
+  reset_expires timestamp with time zone,
+  username text UNIQUE,
+  otp_code character varying,
+  otp_expires timestamp with time zone,
+  otp_verified boolean DEFAULT false,
+  CONSTRAINT users_pkey PRIMARY KEY (id)
+);
