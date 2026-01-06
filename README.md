@@ -4,7 +4,7 @@ Tên dự án: Xây dựng website khóa học(Robotics)
 
 CÁC CHỨC NĂNG CHÍNH CỦA WEB
 - Dùng dể admin có thể tạo tài khoản và cấp mật khẩu cho các giáo viên, admin có chức năng quên mật khẩu phòng trường hợp admin quên mật khẩu của
-mình bàng cách nhấn quên mật khẩu và nó sẽ guiwr mã gồm 6 chữ số tới gmail admin
+mình bàng cách nhấn quên mật khẩu và nó sẽ gửi mã gồm 6 chữ số tới gmail admin
 - Admin có các chức năng chính như xem, thêm, sửa, ẩn hiện, phân quyền các chương trình cũng như các khóa học và bài giảng
 - Admin có quyền phân công cho giáo viên nào dạy khóa học nào cũng như có thể khóa tài khoản giáo viên hoặc ẩn khóa học, bài học
 - Giáo viên được nhận tài khoản mật khẩu từ admin và sử dụng. Trong đó giáo viên chỉ được quyền xem những chương trình, khóa học, bài giảng mà mình
